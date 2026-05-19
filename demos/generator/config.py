@@ -11,7 +11,7 @@ import os
 # Kafka broker connection
 # ---------------------------------------------------------------------------
 # VAST Event Broker (Kafka-compatible endpoint)
-VAST_BOOTSTRAP_SERVERS = os.getenv("VAST_BOOTSTRAP_SERVERS", "172.200.204.135:9092")
+VAST_BOOTSTRAP_SERVERS = os.getenv("VAST_BOOTSTRAP_SERVERS", "<VAST_EVENT_BROKER_VIP>:9092")
 
 # Local Kafka (Docker Compose)
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")

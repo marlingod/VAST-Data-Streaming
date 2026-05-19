@@ -129,7 +129,7 @@ def init(ctx):
 
     ctx.logger.info("Fraud Scorer initializing...")
 
-    kafka_bootstrap = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "172.200.204.135:9092")
+    kafka_bootstrap = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "<VAST_EVENT_BROKER_VIP>:9092")
     ctx.logger.info(f"Kafka bootstrap: {kafka_bootstrap}")
 
     # Initialize Kafka producer for publishing scored transactions and alerts

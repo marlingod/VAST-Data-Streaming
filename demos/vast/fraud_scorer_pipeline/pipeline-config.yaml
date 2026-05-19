@@ -15,7 +15,7 @@ manifest:
   config:
     environment_variables:
       - name: KAFKA_BOOTSTRAP_SERVERS
-        value: "172.200.204.135:9092"
+        value: "<VAST_EVENT_BROKER_VIP>:9092"
   triggers:
     - name: $USER-fraud-raw-trigger
       vrn: vast:dataengine:triggers:$USER-fraud-raw-trigger

@@ -6,7 +6,7 @@ Consumes from fraud.transactions.raw, scores each transaction,
 publishes to fraud.transactions.scored and fraud.alerts.
 
 Usage:
-    python run_standalone.py --bootstrap-servers 172.200.204.135:9092
+    python run_standalone.py --bootstrap-servers <VAST_EVENT_BROKER_VIP>:9092
 
 This is a fallback for when DataEngine is not available, and useful
 for testing the scoring logic independently.
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Standalone fraud scorer")
     parser.add_argument(
         "--bootstrap-servers",
-        default=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "172.200.204.135:9092"),
+        default=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "<VAST_EVENT_BROKER_VIP>:9092"),
     )
     parser.add_argument("--group-id", default="fraud-scorer-standalone")
     args = parser.parse_args()
