@@ -345,3 +345,70 @@ demos/
 ├── Makefile
 └── README.md
 ```
+
+---
+
+## Workload Completion Status
+
+### Phase 1: Foundation (Complete)
+
+- [x] Research: Kafka + Tiered Storage vs VAST Event Broker (`docs/research.md`)
+- [x] PRD with 15-minute demo script and architecture (`docs/specs/`)
+- [x] Transaction generator with 5 fraud patterns and 63 realistic merchants
+- [x] VAST Event Broker topics created (`fraud.transactions.raw`, `scored`, `alerts`, `metrics`)
+- [x] 11M+ transactions generated into VAST at 14K TPS on single CNode
+- [x] Blob Expansion configured on `fraud.transactions.raw` (topics-as-tables)
+- [x] Trino SQL queries validated on live data
+- [x] Standalone fraud scorer consuming raw → publishing to scored + alerts
+- [x] Streamlit dashboard running in demo mode (simulated data)
+- [x] Code pushed to GitHub with no secrets/IPs
+
+### Phase 2: VAST Pipeline Completion (In Progress)
+
+- [ ] Blob Expansion on `fraud.transactions.scored` (18 columns)
+- [ ] Blob Expansion on `fraud.alerts` (10 columns)
+- [ ] Deploy fraud scorer as DataEngine pipeline via `vastde` CLI (not standalone)
+- [ ] Connect dashboard to live VAST data (replace demo mode)
+- [ ] Validate all 7 fraud detection SQL queries against expanded tables
+- [ ] Run scorer continuously during demo to show real-time scoring
+
+### Phase 3: Kafka Comparison Stack
+
+- [ ] Start Docker Compose stack (Kafka + ZK + Schema Registry + ClickHouse + MinIO + Faust)
+- [ ] Load same transactions into Kafka
+- [ ] Configure ClickHouse Kafka Engine for ETL ingestion
+- [ ] Configure MinIO as tiered storage backend
+- [ ] Run Faust fraud scorer against Kafka
+- [ ] Validate same SQL queries on ClickHouse (show latency difference)
+
+### Phase 4: Dashboard & Live Demo
+
+- [ ] Connect dashboard to both VAST and Kafka metrics topics
+- [ ] Live latency comparison (VAST sub-ms vs Kafka ms+)
+- [ ] Live throughput comparison
+- [ ] Side-by-side SQL query panel with real response times
+- [ ] Architecture diagram with live health indicators
+- [ ] Detection feed showing which backend detects first
+
+### Phase 5: AI Investigation Agents
+
+- [ ] Deep Dive Agent: RAG-based fraud investigation on flagged transactions
+- [ ] Record Keeper Agent: immutable audit trail for compliance
+- [ ] Connect agents to VAST InsightEngine for vector search
+- [ ] Agent investigation panel in dashboard
+
+### Phase 6: Polish & Demo Readiness
+
+- [ ] Create `vastpy-cli` script to automate Kafka view creation
+- [ ] End-to-end `make demo` runs all 5 acts without manual steps
+- [ ] Pre-recorded video backup for Acts 2-4 (if VAST cluster unavailable)
+- [ ] SE runbook tested by 2+ team members
+- [ ] Performance tuning: test with all 4 CNodes active
+
+### Future Enhancements (Out of Scope for v1)
+
+- [ ] Live throughput scaling demo: ramp 1K → 100K TPS showing VAST linear scaling
+- [ ] Multi-cluster federation via VAST DataSpace
+- [ ] Custom ML model integration via VAST InsightEngine
+- [ ] Regulatory reporting agent (auto-generate SAR filings)
+- [ ] Interactive mode: let prospect inject their own fraud patterns
