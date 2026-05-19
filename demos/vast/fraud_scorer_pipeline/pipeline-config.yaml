@@ -1,0 +1,28 @@
+# Fraud Scorer Pipeline Configuration
+# Replace $USER with your username and <kubernetes-cluster-vrn> with your cluster VRN.
+#
+# This pipeline scores incoming transactions for fraud and publishes results to:
+#   - fraud.transactions.scored (all transactions with risk scores)
+#   - fraud.alerts (high-risk transactions only, score > 0.8)
+name: $USER-fraud-scorer-pipeline
+description: Real-time fraud detection scoring on VAST Event Broker transactions
+tags:
+  - fraud-detection
+  - element-created
+kubernetes_cluster_vrn: <kubernetes-cluster-vrn>
+namespace: default
+manifest:
+  config:
+    environment_variables:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: "172.200.204.135:9092"
+  triggers:
+    - name: $USER-fraud-raw-trigger
+      vrn: vast:dataengine:triggers:$USER-fraud-raw-trigger
+  function_deployments:
+    - name: $USER-fraud-scorer
+      function_vrn: vast:dataengine:functions:$USER-fraud-scorer
+      revision: 1
+  links:
+    - source: ["$USER-fraud-raw-trigger"]
+      destination: ["$USER-fraud-scorer"]

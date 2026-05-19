@@ -1,0 +1,164 @@
+/* ============================================================
+   VAST vs Kafka  -  Fraud Detection Dashboard
+   Custom Stylesheet (Dark-theme compatible)
+   ============================================================ */
+
+:root {
+    --vast-primary:   #00B4D8;
+    --vast-dark:      #0096B7;
+    --vast-glow:      rgba(0, 180, 216, 0.15);
+    --kafka-primary:  #FF6B35;
+    --kafka-dark:     #D45A2B;
+    --kafka-glow:     rgba(255, 107, 53, 0.15);
+    --bg-card:        #1E1E2E;
+    --bg-surface:     #262637;
+    --text-primary:   #E0E0E0;
+    --text-secondary: #A0A0B8;
+    --border-color:   #333348;
+    --success:        #2ECC71;
+    --danger:         #E74C3C;
+    --mono-font:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ---- Global resets ---- */
+.stApp {
+    background-color: #0E0E1A;
+}
+
+/* ---- Card containers ---- */
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s ease;
+}
+.metric-card:hover {
+    border-color: var(--vast-primary);
+}
+
+.metric-card.kafka {
+    border-left: 3px solid var(--kafka-primary);
+}
+.metric-card.vast {
+    border-left: 3px solid var(--vast-primary);
+}
+
+/* ---- Section titles ---- */
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+/* ---- Monospace blocks (SQL, metrics) ---- */
+.mono-block {
+    font-family: var(--mono-font);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    color: var(--text-primary);
+}
+
+/* ---- Latency badges ---- */
+.latency-badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 6px;
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.latency-badge.fast {
+    background: rgba(0, 180, 216, 0.18);
+    color: var(--vast-primary);
+}
+.latency-badge.slow {
+    background: rgba(255, 107, 53, 0.18);
+    color: var(--kafka-primary);
+}
+
+/* ---- Alert feed items ---- */
+.alert-item {
+    background: var(--bg-surface);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--vast-primary);
+    font-size: 0.85rem;
+}
+.alert-item.kafka-alert {
+    border-left-color: var(--kafka-primary);
+}
+
+/* ---- Architecture boxes ---- */
+.arch-box {
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.35rem 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
+}
+.arch-box.vast-box {
+    background: var(--vast-glow);
+    border: 1px solid var(--vast-primary);
+    color: var(--vast-primary);
+}
+.arch-box.kafka-box {
+    background: var(--kafka-glow);
+    border: 1px solid var(--kafka-primary);
+    color: var(--kafka-primary);
+}
+
+/* ---- Status indicators ---- */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.status-dot.green  { background: var(--success); }
+.status-dot.orange { background: var(--kafka-primary); }
+
+/* ---- Big comparison number ---- */
+.big-compare {
+    font-family: var(--mono-font);
+    font-size: 1.6rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+.big-compare .vast-num  { color: var(--vast-primary); }
+.big-compare .kafka-num { color: var(--kafka-primary); }
+
+/* ---- Scrollable feed container ---- */
+.feed-scroll {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+.feed-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.feed-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+/* ---- Responsive tweaks ---- */
+@media (max-width: 768px) {
+    .big-compare { font-size: 1.2rem; }
+    .metric-card { padding: 0.9rem 1rem; }
+}
