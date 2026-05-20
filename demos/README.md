@@ -290,6 +290,98 @@ When `make setup-kafka` is running:
 
 ---
 
+## VAST DataEngine Deployment (Optional)
+
+By default the demo uses the **standalone fraud scorer** (`run_standalone.py`) — a Python Kafka consumer that runs on your laptop. For a more impressive demo, you can deploy the scorer as a **VAST DataEngine serverless function** that runs directly on the VAST cluster.
+
+### Architecture
+
+```
+S3 Bucket (yg-de-source-bucket)
+        ↓  [ObjectCreated:* event]
+  fraudrawtrig (Element Trigger)
+        ↓  [fraudtransactionsraw topic]
+  fraud-scorer (DataEngine Function)
+        ↓                    ↓
+fraud.transactions.scored  fraud.alerts
+     (all txns)           (score >= 0.8)
+```
+
+### Quick Deploy
+
+```bash
+# 1. Build the function
+cd vast/fraud_scorer_pipeline
+vastde functions build fraud-scorer
+
+# 2. Push to container registry
+docker tag fraud-scorer:latest <registry>/fraud-scorer:v1.0
+docker push <registry>/fraud-scorer:v1.0
+
+# 3. Create function, trigger, and pipeline
+vastde functions create --config @function-fraud-scorer.yaml
+vastde triggers create element --config @trigger-fraudrawtrig.yaml
+vastde pipelines create --config @pipeline-fraud-scorer.yaml
+
+# 4. Deploy
+vastde pipelines deploy fraud-scorer-pipeline
+```
+
+### Manifest Files
+
+| File | Purpose |
+|------|---------|
+| `function-fraud-scorer.yaml` | Function definition (image, registry, resources) |
+| `trigger-fraudrawtrig.yaml` | S3 element trigger (bucket → Kafka topic) |
+| `pipeline-fraud-scorer.yaml` | Pipeline manifest (trigger → function wiring) |
+
+### Known Issues
+
+- **Docker 27+**: `vastde` v5.5.0-dev requires Docker 26.x — pin with `sudo apt install docker-ce=5:26.1.4-1~ubuntu.24.04~noble`
+- **Topic names with dots**: `vastde` CLI rejects dots — create topics via VAST Admin UI instead
+- **Visual Builder required**: Pipeline connections must be wired in the Visual Builder UI before first deploy
+
+See [`vast/fraud_scorer_pipeline/DEPLOYMENT.md`](vast/fraud_scorer_pipeline/DEPLOYMENT.md) for the full 9-step deployment guide with troubleshooting.
+
+---
+
+## Blob Expansion (Topics-as-Tables)
+
+Blob Expansion is how VAST turns raw JSON Kafka messages into structured, SQL-queryable columns. This is the key mechanism that enables **topics-as-tables** — the core demo differentiator.
+
+### How It Works
+
+1. Messages arrive in the Event Broker as JSON blobs (single `value` column)
+2. Blob Expansion is configured once per topic — mapping JSON fields to typed columns
+3. VAST continuously extracts new messages into a target table in a separate schema
+4. The target table is instantly queryable with SQL via Trino, `vastdb` SDK, or Spark
+
+### Expansion Schemas
+
+| Topic | Target Table | Columns |
+|-------|-------------|---------|
+| `fraud.transactions.raw` | `fraud_detection.transactions` | 14 (transaction_id, card_id, amount, location, merchant, is_fraud, ...) |
+| `fraud.transactions.scored` | `fraud_detection.scored` | 18 (all transaction fields + risk_score, triggered_rules, scored_at, scoring_latency_ms) |
+| `fraud.alerts` | `fraud_detection.alerts` | 10 (transaction_id, card_id, amount, risk_score, fraud_type, merchant_id, ...) |
+| `fraud.metrics` | `fraud_detection.metrics` | 4 (source, timestamp, msgs_per_sec, total_sent) |
+
+### Setup
+
+Blob Expansion is configured automatically by `./setup.sh` (step 5). To run manually:
+
+```bash
+python vast/blob_expansion_setup.py \
+    --endpoint $VAST_ENDPOINT \
+    --access-key $VAST_ACCESS_KEY \
+    --secret-key $VAST_SECRET_KEY
+```
+
+### Demo Talking Point
+
+> "Kafka requires a separate ETL pipeline — Kafka Connect or Flink — to get data into a queryable format. VAST does it automatically with Blob Expansion. One-time config, zero ongoing maintenance."
+
+---
+
 ## Troubleshooting
 
 | Issue | Fix |
@@ -328,6 +420,14 @@ demos/
 │   └── config.py
 ├── vast/                   # VAST-specific components
 │   ├── fraud_scorer/       # DataEngine serverless function
+│   ├── fraud_scorer_pipeline/  # DataEngine deployment manifests
+│   │   ├── DEPLOYMENT.md       # Full 9-step deployment guide
+│   │   ├── main.py             # Fraud scorer function (init + handler)
+│   │   ├── run_standalone.py   # Standalone scorer (no DataEngine needed)
+│   │   ├── function-fraud-scorer.yaml   # Function definition
+│   │   ├── trigger-fraudrawtrig.yaml    # S3 element trigger
+│   │   └── pipeline-fraud-scorer.yaml   # Pipeline manifest
+│   ├── blob_expansion_setup.py # Blob Expansion config (topics-as-tables)
 │   ├── historical/         # Topics-as-tables queries
 │   ├── agents/             # Deep Dive Agent + Record Keeper
 │   └── setup.py            # Schema and data loading
