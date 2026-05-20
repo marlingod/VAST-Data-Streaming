@@ -15,8 +15,8 @@ make demo-mode
 # Open http://localhost:8501
 
 # Full demo (requires VAST cluster)
-./setup.sh    # First-time: guided wizard
-make demo     # Starts everything
+./setup.sh        # First-time: guided wizard creates .env
+make demo          # Starts everything — Ctrl+C to stop
 ```
 
 See [demos/README.md](demos/README.md) for full documentation, architecture diagrams, demo script, and SE runbook.

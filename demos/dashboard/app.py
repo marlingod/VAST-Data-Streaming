@@ -51,7 +51,10 @@ from metrics_collector import (  # noqa: E402
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() in ("true", "1", "yes")
+# Auto-detect: if .env exists with real credentials, default to live mode
+_env_file_exists = os.path.exists(os.path.join(os.path.dirname(__file__), "..", ".env"))
+_default_demo_mode = "false" if _env_file_exists else "true"
+DEMO_MODE = os.getenv("DEMO_MODE", _default_demo_mode).lower() in ("true", "1", "yes")
 VAST_BOOTSTRAP = os.getenv("VAST_BOOTSTRAP", "localhost:9092")
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:19092")
 REFRESH_INTERVAL = int(os.getenv("REFRESH_INTERVAL", "1"))

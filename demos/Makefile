@@ -1,49 +1,61 @@
-.PHONY: setup-vast setup-blob-expansion setup-kafka load-history demo demo-mode clean help
+.PHONY: setup demo demo-vast demo-kafka demo-mode generate generate-vast generate-kafka score setup-kafka status clean help
 
-VAST_ENDPOINT ?=
-VAST_ACCESS_KEY ?=
-VAST_SECRET_KEY ?=
 DEMO_TPS ?= 1000
 DEMO_DURATION ?= 300
+
+# Source .env if it exists
+ifneq (,$(wildcard .env))
+    include .env
+    export
+endif
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-setup-vast: ## Setup VAST Event Broker, DataEngine, and load data
-	@bash scripts/setup_vast.sh
+# ── Setup ────────────────────────────────────────────
 
-setup-kafka: ## Start Kafka Docker stack and create topics
+setup: ## First-time setup wizard (creates .env, validates cluster, configures blob expansion)
+	@bash setup.sh
+
+setup-kafka: ## Start Kafka Docker comparison stack
 	@bash scripts/setup_kafka.sh
 
-setup-blob-expansion: ## Configure Blob Expansion (topics-as-tables) on VAST
-	@PYTHONPATH=. python vast/blob_expansion_setup.py \
-		--endpoint $${VAST_ENDPOINT} \
-		--access-key $${VAST_ACCESS_KEY} \
-		--secret-key $${VAST_SECRET_KEY}
+# ── Demo ─────────────────────────────────────────────
 
-setup-all: setup-vast setup-blob-expansion setup-kafka ## Setup both VAST and Kafka
+demo: ## Full side-by-side demo (VAST + Kafka + scorer + dashboard)
+	@bash scripts/preflight.sh
+	@bash scripts/run_demo.sh
 
-load-history: ## Load 6 months of synthetic transaction history
-	@PYTHONPATH=. python -c "from vast.setup import load_historical_data; load_historical_data()"
+demo-vast: ## VAST pipeline only (generator + scorer + dashboard)
+	@bash scripts/preflight.sh
+	@DEMO_KAFKA=false bash scripts/run_demo.sh
 
-demo: ## Run the full demo (both generators + dashboard)
-	@PYTHONPATH=. bash scripts/run_demo.sh
+demo-kafka: ## Kafka pipeline only (Docker + generator + dashboard)
+	@bash scripts/setup_kafka.sh
+	@DEMO_VAST=false bash scripts/run_demo.sh
 
-demo-mode: ## Run dashboard in demo mode (simulated data, no backends needed)
+demo-mode: ## Dashboard with simulated data (no backends needed)
 	@DEMO_MODE=true PYTHONPATH=. streamlit run dashboard/app.py --server.port 8501
 
-demo-vast-only: ## Run generator against VAST Event Broker
-	@PYTHONPATH=. python -m generator.transaction_generator --target vast --tps $(DEMO_TPS) --duration $(DEMO_DURATION)
+# ── Individual Components ────────────────────────────
 
-demo-kafka-only: ## Run generator against local Kafka Docker
-	@PYTHONPATH=. python -m generator.transaction_generator --target kafka --tps $(DEMO_TPS) --duration $(DEMO_DURATION)
+generate: ## Run transaction generator (TPS=5000 DURATION=60)
+	@PYTHONPATH=. python3 -m generator.transaction_generator --target vast --tps $(DEMO_TPS) --duration $(DEMO_DURATION)
 
-clean: ## Tear down everything
+generate-vast: ## Generator against VAST Event Broker only
+	@PYTHONPATH=. python3 -m generator.transaction_generator --target vast --tps $(DEMO_TPS) --duration $(DEMO_DURATION)
+
+generate-kafka: ## Generator against local Kafka Docker only
+	@PYTHONPATH=. python3 -m generator.transaction_generator --target kafka --tps $(DEMO_TPS) --duration $(DEMO_DURATION)
+
+score: ## Start the standalone fraud scorer
+	@PYTHONPATH=. python3 -u vast/fraud_scorer_pipeline/run_standalone.py
+
+status: ## Show health of all demo components
+	@bash scripts/status.sh
+
+clean: ## Tear down Docker stack and stop all processes
 	@bash scripts/teardown.sh
 
-status: ## Show status of all services
-	@echo "=== Kafka Stack ==="
-	@cd kafka && docker compose ps 2>/dev/null || echo "Not running"
-	@echo ""
-	@echo "=== VAST ==="
-	@if [ -n "$${VAST_ENDPOINT:-}" ]; then vastde topics list 2>/dev/null || echo "Cannot reach VAST"; else echo "VAST_ENDPOINT not set"; fi
+deploy-dataengine: ## Optional: deploy fraud scorer via VAST DataEngine CLI
+	@echo "See demos/vast/fraud_scorer_pipeline/DEPLOYMENT.md for step-by-step guide"

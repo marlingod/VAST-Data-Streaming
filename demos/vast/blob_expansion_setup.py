@@ -63,13 +63,38 @@ TRANSACTION_SCHEMA = pa.schema([
     pa.field("is_fraud", pa.bool_()),
 ])
 
-ALERT_SCHEMA = pa.schema([
+SCORED_SCHEMA = pa.schema([
     pa.field("transaction_id", pa.string()),
     pa.field("timestamp", pa.string()),
     pa.field("card_id", pa.string()),
+    pa.field("customer_id", pa.string()),
+    pa.field("merchant_id", pa.string()),
+    pa.field("merchant_category", pa.string()),
+    pa.field("amount", pa.float64()),
+    pa.field("currency", pa.string()),
+    pa.field("location_lat", pa.float64()),
+    pa.field("location_lon", pa.float64()),
+    pa.field("location_city", pa.string()),
+    pa.field("device_fingerprint", pa.string()),
+    pa.field("channel", pa.string()),
+    pa.field("is_fraud", pa.bool_()),
+    pa.field("risk_score", pa.float64()),
+    pa.field("triggered_rules", pa.string()),
+    pa.field("scored_at", pa.string()),
+    pa.field("scoring_latency_ms", pa.float64()),
+])
+
+ALERT_SCHEMA = pa.schema([
+    pa.field("transaction_id", pa.string()),
+    pa.field("card_id", pa.string()),
     pa.field("amount", pa.float64()),
     pa.field("risk_score", pa.float64()),
+    pa.field("triggered_rules", pa.string()),
     pa.field("fraud_type", pa.string()),
+    pa.field("merchant_id", pa.string()),
+    pa.field("location_city", pa.string()),
+    pa.field("timestamp", pa.string()),
+    pa.field("alerted_at", pa.string()),
 ])
 
 METRICS_SCHEMA = pa.schema([
@@ -82,6 +107,7 @@ METRICS_SCHEMA = pa.schema([
 # Map topic -> (target table name, expansion schema)
 TOPIC_CONFIG = {
     "fraud.transactions.raw": ("transactions", TRANSACTION_SCHEMA),
+    "fraud.transactions.scored": ("scored", SCORED_SCHEMA),
     "fraud.alerts": ("alerts", ALERT_SCHEMA),
     "fraud.metrics": ("metrics", METRICS_SCHEMA),
 }

@@ -33,24 +33,25 @@ Open http://localhost:8501
 ### Full Demo Setup
 
 ```bash
-# 1. Install Python dependencies
-cd demos
+# 1. Clone and install
+git clone https://github.com/marlingod/VAST-Data-Streaming.git
+cd VAST-Data-Streaming/demos
 pip install -r requirements.txt
 
-# 2. Setup VAST cluster (requires cluster access)
-export VAST_ENDPOINT=<your-cluster-vip>
-export VAST_ACCESS_KEY=<your-access-key>
-export VAST_SECRET_KEY=<your-secret-key>
-make setup-vast
+# 2. First-time setup (guided wizard)
+./setup.sh
 
-# 3. Setup Kafka Docker stack (local)
-make setup-kafka
-
-# 4. Run the demo
+# 3. Run the demo
 make demo
+# Open http://localhost:8501
+# Ctrl+C to stop
+```
 
-# 5. Open the comparison dashboard
-open http://localhost:8501
+### Repeat Runs
+
+```bash
+cd VAST-Data-Streaming/demos
+make demo        # Everything starts automatically
 ```
 
 ---
