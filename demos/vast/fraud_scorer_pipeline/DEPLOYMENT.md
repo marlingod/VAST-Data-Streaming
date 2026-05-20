@@ -20,6 +20,25 @@ fraud.transactions.scored  fraud.alerts
 
 ---
 
+## Files in This Directory
+
+| File | Purpose |
+|------|---------|
+| `main.py` | Fraud scorer function code (init + handler) |
+| `run_standalone.py` | Standalone Kafka consumer scorer (fallback, no DataEngine) |
+| `requirements.txt` | Python dependencies for the function |
+| `Aptfile` | System packages (none required) |
+| `customDeps` | Custom dependencies (none required) |
+| `function-fraud-scorer.yaml` | DataEngine function definition |
+| `trigger-fraudrawtrig.yaml` | Element trigger definition (S3 → Kafka topic) |
+| `pipeline-fraud-scorer.yaml` | Pipeline manifest (trigger → function wiring) |
+| `pipeline-config.yaml` | Legacy pipeline config (use pipeline-fraud-scorer.yaml instead) |
+| `pipeline-manifest.yaml` | Legacy manifest (use pipeline-fraud-scorer.yaml instead) |
+| `config.example.yaml` | Environment variable template |
+| `DEPLOYMENT.md` | This file |
+
+---
+
 ## Prerequisites
 
 - VAST DataEngine CLI (`vastde`) installed and configured
@@ -112,6 +131,8 @@ docker push malingod/fraud-scorer:v1.0
 
 ### Step 4 — Create the Function in VAST DataEngine
 
+Using the manifest file (`function-fraud-scorer.yaml`):
+
 ```bash
 vastde functions create \
   --name fraud-scorer \
@@ -135,6 +156,8 @@ Topics needed:
 
 ### Step 6 — Create the Element Trigger
 
+Using the manifest file (`trigger-fraudrawtrig.yaml`):
+
 ```bash
 vastde triggers create element \
   --name fraudrawtrig \
@@ -147,49 +170,18 @@ vastde triggers create element \
 
 ### Step 7 — Create the Pipeline
 
+Using the manifest file (`pipeline-fraud-scorer.yaml`):
+
 ```bash
-vastde pipelines create --config @pipeline-manifest.yaml
+vastde pipelines create --config @pipeline-fraud-scorer.yaml
 ```
 
-Where `pipeline-manifest.yaml` contains:
-
-```yaml
-name: fraud-scorer-pipeline
-description: Real-time fraud detection scoring pipeline
-namespace: default
-kubernetes_cluster_vrn: vast:dataengine:kubernetes-clusters:wb-dataengine
-manifest:
-  config:
-    environment_variables:
-      - name: KAFKA_BOOTSTRAP_SERVERS
-        value: "172.200.204.134:9092"
-  triggers:
-    - name: fraudrawtrig
-      vrn: vast:dataengine:triggers:fraudrawtrig
-  function_deployments:
-    - name: fraud-scorer-2
-      function_vrn: vast:dataengine:functions:fraud-scorer
-      revision: 1
-      config:
-        log_level: INFO
-        timeout: 60
-        resources:
-          min_concurrency: 1
-          max_concurrency: 10
-          min_cpu: 100m
-          max_cpu: 500m
-          min_memory: 128Mi
-          max_memory: 256Mi
-  links:
-    - source:
-        - fraudrawtrig
-      destination:
-        - fraud-scorer-2
-      topic: vast:dataengine:topics:yg-bucket/fraudtransactionsraw
-      config:
-        retries: 3
-        events_order: unordered
-```
+See `pipeline-fraud-scorer.yaml` for the full manifest. Key settings:
+- Links `fraudrawtrig` trigger → `fraud-scorer` function
+- Kafka bootstrap: `172.200.204.134:9092`
+- Concurrency: 1-10 instances
+- Resources: 100-500m CPU, 128-256Mi memory
+- Retries: 3, unordered events
 
 ### Step 8 — Deploy
 

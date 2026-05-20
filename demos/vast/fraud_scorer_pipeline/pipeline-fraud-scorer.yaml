@@ -1,0 +1,54 @@
+# VAST DataEngine Pipeline Manifest
+# Usage: vastde pipelines create --config @pipeline-fraud-scorer.yaml
+#
+# This pipeline wires the element trigger (fraudrawtrig) to the
+# fraud-scorer function. When a file lands in yg-de-source-bucket,
+# the trigger fires, the function scores the transaction, and results
+# are published to fraud.transactions.scored and fraud.alerts topics.
+#
+# Before running, ensure:
+#   1. Function created: vastde functions create --config @function-fraud-scorer.yaml
+#   2. Trigger created: vastde triggers create element --config @trigger-fraudrawtrig.yaml
+#   3. Kafka topics exist: fraudtransactionsraw, fraud.transactions.scored, fraud.alerts
+#
+# After creating, deploy with:
+#   vastde pipelines deploy fraud-scorer-pipeline
+#
+# NOTE: You may need to wire trigger → function in the Visual Builder UI
+#       before the first deploy. See DEPLOYMENT.md for details.
+
+name: fraud-scorer-pipeline
+description: Real-time fraud detection scoring pipeline
+namespace: default
+kubernetes_cluster_vrn: vast:dataengine:kubernetes-clusters:wb-dataengine
+manifest:
+  config:
+    environment_variables:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: "172.200.204.134:9092"
+  triggers:
+    - name: fraudrawtrig
+      vrn: vast:dataengine:triggers:fraudrawtrig
+  function_deployments:
+    - name: fraud-scorer-2
+      function_vrn: vast:dataengine:functions:fraud-scorer
+      revision: 1
+      config:
+        log_level: INFO
+        timeout: 60
+        resources:
+          min_concurrency: 1
+          max_concurrency: 10
+          min_cpu: 100m
+          max_cpu: 500m
+          min_memory: 128Mi
+          max_memory: 256Mi
+  links:
+    - source:
+        - fraudrawtrig
+      destination:
+        - fraud-scorer-2
+      topic: vast:dataengine:topics:yg-bucket/fraudtransactionsraw
+      config:
+        retries: 3
+        events_order: unordered

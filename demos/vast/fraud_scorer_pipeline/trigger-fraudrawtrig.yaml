@@ -1,0 +1,31 @@
+# VAST DataEngine Element Trigger Definition
+# Usage: vastde triggers create element --config @trigger-fraudrawtrig.yaml
+#
+# This trigger watches an S3 bucket for new objects and fires events
+# to the fraudtransactionsraw Kafka topic.
+#
+# Before running, ensure:
+#   1. S3 source bucket exists (yg-de-source-bucket)
+#   2. Kafka topic fraudtransactionsraw exists in yg-bucket
+#
+# Equivalent CLI command:
+#   vastde triggers create element \
+#     --name fraudrawtrig \
+#     --source-bucket yg-de-source-bucket \
+#     --event ObjectCreated:* \
+#     --topic-name fraudtransactionsraw \
+#     --broker-type Internal \
+#     --broker-name yg-bucket
+
+name: fraudrawtrig
+description: >
+  Watches yg-de-source-bucket for new S3 objects (ObjectCreated:*).
+  Publishes events to the fraudtransactionsraw Kafka topic in yg-bucket,
+  which triggers the fraud-scorer function via the pipeline.
+
+type: element
+source_bucket: yg-de-source-bucket
+event: "ObjectCreated:*"
+topic_name: fraudtransactionsraw
+broker_type: Internal
+broker_name: yg-bucket
