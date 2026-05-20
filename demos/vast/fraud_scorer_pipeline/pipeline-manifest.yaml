@@ -1,0 +1,35 @@
+name: fraud-scorer-pipeline
+description: Real-time fraud detection scoring pipeline
+namespace: default
+kubernetes_cluster_vrn: vast:dataengine:kubernetes-clusters:wb-dataengine
+manifest:
+  config:
+    environment_variables:
+      - name: KAFKA_BOOTSTRAP_SERVERS
+        value: "172.200.204.134:9092"
+  triggers:
+    - name: fraudrawtrig
+      vrn: vast:dataengine:triggers:fraudrawtrig
+  function_deployments:
+    - name: fraud-scorer-2
+      function_vrn: vast:dataengine:functions:fraud-scorer
+      revision: 1
+      config:
+        log_level: INFO
+        timeout: 60
+        resources:
+          min_concurrency: 1
+          max_concurrency: 10
+          min_cpu: 100m
+          max_cpu: 500m
+          min_memory: 128Mi
+          max_memory: 256Mi
+  links:
+    - source:
+        - fraudrawtrig
+      destination:
+        - fraud-scorer-2
+      topic: vast:dataengine:topics:yg-bucket/fraudtransactionsraw
+      config:
+        retries: 3
+        events_order: unordered
